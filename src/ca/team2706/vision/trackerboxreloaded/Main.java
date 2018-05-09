@@ -129,6 +129,8 @@ public class Main {
 		public static class Target {
 			/** The x center of the target in the image **/
 			int xCentre;
+			/** The angle to the object **/
+			double angle;
 			/**
 			 * The normalized x center of the target that is between 0 and 1
 			 **/
@@ -147,6 +149,13 @@ public class Main {
 								// occupies
 			/** The rectangle made from x and y centers **/
 			Rect boundingBox;
+			
+			//TODO: Add kinect stuff so we can get the height and distance
+			
+			/** The average distance to the target **/
+			int distance;
+			/** The height of the target **/
+			int height;
 		}
 
 		/** The List of all the targets in the image **/
@@ -365,6 +374,8 @@ public class Main {
 			visionTable.putNumber("ctrX", visionData.preferredTarget.xCentreNorm);
 			// Puts the normalized area into the vision table
 			visionTable.putNumber("area", visionData.preferredTarget.areaNorm);
+			// Puts the angle into the vision table
+			visionTable.putNumber("angle", visionData.preferredTarget.angle);
 		}
 	}
 
@@ -427,6 +438,10 @@ public class Main {
 		out.println(timestamp);
 		out.close();
 		
+	}
+	public static void maths(VisionData data){
+		//Does math, if you want to know what it does ask Nathan, he gave me the math.
+		data.preferredTarget.angle = Math.tan(data.preferredTarget.height/data.preferredTarget.distance);
 	}
 
 	/**
@@ -563,6 +578,8 @@ public class Main {
 				// Sets the raw image to the frame
 				rawOutputImg = frame;
 			}
+			//Calculate the maths
+			maths(visionData);
 			// Sends the data to the vision table
 			sendVisionDataOverNetworkTables(visionData);
 			lastData = visionData;
