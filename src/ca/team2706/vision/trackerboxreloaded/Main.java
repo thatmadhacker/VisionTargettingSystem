@@ -26,11 +26,9 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.VideoWriter;
-import org.opencv.videoio.Videoio;
 
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import processing.core.PApplet;
 
 public class Main {
 
@@ -38,13 +36,13 @@ public class Main {
 	public static int timestamp = 0;
 	public static File timestampfile;
 	public static BufferedImage currentImage;
-	public static VideoCapture camera;
 	public static VisionData lastData;
 	public static boolean process = true;
 	public static boolean showMiddle = false;
 	public static boolean useCamera = true;
 	public static Mat frame;
-
+	public static Data data;
+	
 	public static void setFrame(Mat f) {
 		frame = f;
 	}
@@ -471,48 +469,12 @@ public class Main {
 			e2.printStackTrace();
 		}
 		// Initilizes a Matrix to hold the frame
-
+		
 		frame = new Mat();
 
 		// Open a connection to the camera
-		VideoCapture camera = null;
-
-		// Whether to use a camera, or load an image file from disk.
-		useCamera = true;
-		if (visionParams.cameraSelect == -1) {
-			useCamera = false;
-		}
-
-		if (useCamera) {
-			// Initilizes the camera
-			camera = new VideoCapture(visionParams.cameraSelect);
-
-			// Sets camera parameters
-			int fourcc = VideoWriter.fourcc('M', 'J', 'P', 'G');
-			camera.set(Videoio.CAP_PROP_FOURCC, fourcc);
-			camera.set(Videoio.CAP_PROP_FRAME_WIDTH, visionParams.width);
-			camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, visionParams.height);
-
-			camera.read(frame);
-
-			if (!camera.isOpened()) {
-				// If the camera didn't open throw an error
-				System.err.println("Error: Can not connect to camera");
-				// Exit
-				System.exit(1);
-			}
-
-			// Set up the camera feed
-			camera.read(frame);
-		} else {
-			// load the image from file.
-			try {
-				frame = bufferedImageToMat(ImageIO.read(new File(visionParams.imageFile)));
-			} catch (IOException e) {
-				e.printStackTrace();
-				frame = new Mat();
-			}
-		}
+		PApplet.main("ca.team2706.vision.trackerboxreloaded.Vision");
+		
 		// The window to display the raw image
 		DisplayGui guiRawImg = null;
 		// The window to display the processed image
@@ -548,10 +510,8 @@ public class Main {
 		while (true) {
 			if (useCamera) {
 				// Read the frame from the camera, if it fails try again
-				if (!camera.read(frame)) {
-					System.err.println("Error: Failed to get a frame from the camera");
-					continue;
-				}
+				data = Vision.getData();
+				frame = bufferedImageToMat(data.getImage());
 			} // else use the image from disk that we loaded above
 			if (use_GUI) {
 				// Resize the frame
@@ -652,7 +612,8 @@ public class Main {
 
 	public static VisionData forceProcess() {
 		Mat frame = new Mat();
-		camera.read(frame);
+		Data data = Vision.getData();
+		frame = bufferedImageToMat(data.getImage());
 		Imgproc.resize(frame, frame, visionParams.sz);
 
 		VisionData visionData = Pipeline.process(frame, visionParams, false);
@@ -674,7 +635,8 @@ public class Main {
 
 	public static Mat getFrame() {
 		Mat frame = new Mat();
-		camera.read(frame);
+		Data d = Vision.getData();
+		frame = bufferedImageToMat(d.getImage());
 		return frame;
 	}
 }
